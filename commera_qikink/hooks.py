@@ -263,3 +263,6 @@ commera_api_version = [1]
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+
+after_install = "commera_qikink.install.add_custom_fields"
+after_migrate = "commera_qikink.install.add_custom_fields"
