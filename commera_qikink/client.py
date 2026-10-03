@@ -9,6 +9,8 @@ LIVE_URL = "https://api.qikink.com"
 # Tokens live 3600 s; renewing early keeps a request from carrying one that expires on the way.
 TOKEN_TTL_SECONDS = 3500
 TOKEN_LOCK_SECONDS = 30
+# The legacy order endpoint is the only read the sandbox serves (order/list is 404 there); 10 orders a page.
+MAX_ORDER_PAGES = 10
 
 
 class QikinkError(frappe.ValidationError):
@@ -29,8 +31,22 @@ class Qikink:
 		self.base_url = SANDBOX_URL if settings.sandbox else LIVE_URL
 		self.token_key = frappe.cache.make_key(f"commera_qikink:token:{self.base_url}:{self.client_id}")
 
+	def create_order(self, payload: dict) -> dict:
+		return self.request("POST", "/api/order/create", json=payload)
+
 	def get_order(self, order_id: str | int) -> dict:
 		return self.request("GET", "/api/order", params={"id": order_id})
+
+	def find_order(self, order_number: str) -> dict | None:
+		# Neither endpoint filters by order number on the sandbox, so page through the recent orders.
+		for page_no in range(1, MAX_ORDER_PAGES + 1):
+			orders = self.request("GET", "/api/order", params={"page_no": page_no})
+			if not orders:
+				return None
+			for order in orders:
+				if get_order_number(order) == order_number:
+					return order
+		return None
 
 	def request(self, method: str, path: str, **kwargs) -> dict:
 		token = self.get_token()
@@ -117,3 +133,8 @@ def get_error(status: int, body: object) -> str | None:
 	if status >= 400:
 		return cstr(body)[:500] or f"HTTP {status}"
 	return _("Unexpected response from Qikink: {0}").format(cstr(body)[:500])
+
+
+def get_order_number(order: dict) -> str:
+	# Qikink prefixes the number we sent with its own account number: "654367_202600062".
+	return cstr(order.get("number")).split("_", 1)[-1]

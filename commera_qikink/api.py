@@ -2,7 +2,7 @@ import frappe
 from commera.sdk import STORE_ORDER_TYPE
 from frappe.utils import today
 
-from commera_qikink import products
+from commera_qikink import orders, products
 
 
 @frappe.whitelist()
@@ -26,3 +26,9 @@ def get_product_skus(item: str) -> list[dict]:
 def save_product_skus(item: str, skus: str | list) -> list[dict]:
 	frappe.has_permission("Item", "write", doc=item, throw=True)
 	return products.save_product_skus(item, frappe.parse_json(skus))
+
+
+@frappe.whitelist(methods=["POST"])
+def send_order(sales_order: str) -> str | None:
+	frappe.has_permission("Sales Order", "write", doc=sales_order, throw=True)
+	return orders.send_order(sales_order)

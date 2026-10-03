@@ -268,3 +268,6 @@ after_install = "commera_qikink.install.add_custom_fields"
 after_migrate = "commera_qikink.install.add_custom_fields"
 
 commera_validate_cart = ["commera_qikink.cart.get_unmapped_item_refusal"]
+commera_order_paid = ["commera_qikink.orders.on_order_paid"]
+
+doc_events = {"Sales Order": {"before_validate": "commera_qikink.orders.set_drop_ship_lines"}}
