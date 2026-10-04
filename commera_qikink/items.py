@@ -2,8 +2,9 @@ import frappe
 from frappe.query_builder import DocType
 
 
-def get_qikink_items(item_codes: list[str], supplier: str) -> dict:
+def get_qikink_items(item_codes: list[str]) -> dict:
 	"""Keyed by item code; each row has commera_qikink_sku and commera_qikink_plain_product."""
+	supplier = frappe.db.get_single_value("Qikink Settings", "supplier")
 	if not item_codes or not supplier:
 		return {}
 	# A Qikink item is one Qikink drop-ships: delivered by supplier, with the Qikink supplier as default.

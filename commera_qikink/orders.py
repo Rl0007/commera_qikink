@@ -15,6 +15,7 @@ MAX_ADDRESS_LINE_LENGTH = 90
 SENDING_STATUS = "Sending"
 SENT_STATUS = "Sent"
 CANCELLED_STATUS = "Cancelled"
+PURCHASE_ORDER_SAVEPOINT = "commera_qikink_purchase_order"
 
 
 def on_order_paid(event):
@@ -45,8 +46,8 @@ def set_drop_ship_lines(doc, method=None):
 	# Commera maps cart lines to the order with delivered_by_supplier 0, and it can't change after submit.
 	if doc.docstatus != 0:
 		return
-	supplier = frappe.get_cached_doc("Qikink Settings").supplier
-	qikink_items = get_qikink_items([row.item_code for row in doc.items], supplier)
+	qikink_items = get_qikink_items([row.item_code for row in doc.items])
+	supplier = frappe.db.get_single_value("Qikink Settings", "supplier")
 	for row in doc.items:
 		if row.item_code in qikink_items:
 			row.delivered_by_supplier = 1
@@ -54,14 +55,12 @@ def set_drop_ship_lines(doc, method=None):
 
 
 def has_qikink_lines(sales_order: str) -> bool:
-	supplier = frappe.get_cached_doc("Qikink Settings").supplier
 	item_codes = frappe.get_all("Sales Order Item", filters={"parent": sales_order}, pluck="item_code")
-	return bool(get_qikink_items(item_codes, supplier))
+	return bool(get_qikink_items(item_codes))
 
 
 def get_qikink_lines(order) -> list[tuple]:
-	supplier = frappe.get_cached_doc("Qikink Settings").supplier
-	qikink_items = get_qikink_items([row.item_code for row in order.items], supplier)
+	qikink_items = get_qikink_items([row.item_code for row in order.items])
 	lines = [(row, qikink_items[row.item_code]) for row in order.items if row.item_code in qikink_items]
 	if unmapped := sorted({row.item_name for row, item in lines if not item.commera_qikink_sku}):
 		frappe.throw(
@@ -92,11 +91,12 @@ def submit_to_qikink(order, lines: list[tuple]):
 
 
 def save_drop_ship_order(order):
+	frappe.db.savepoint(PURCHASE_ORDER_SAVEPOINT)
 	try:
 		make_drop_ship_order(order)
 	except Exception:
 		# Qikink already holds the order, so a failed purchase order is logged, never allowed to undo it.
-		frappe.db.rollback()
+		frappe.db.rollback(save_point=PURCHASE_ORDER_SAVEPOINT)
 		frappe.log_error(
 			title=_("Qikink purchase order failed for {0}").format(order.name),
 			reference_doctype="Sales Order",
@@ -188,7 +188,7 @@ def get_shipping_address(order: dict) -> dict:
 		"city": cstr(address["city"]).strip(),
 		"zip": cstr(address["pincode"]).strip(),
 		"province": cstr(address["state"]).strip(),
-		"country_code": cstr(frappe.db.get_value("Country", address["country"], "code")).upper(),
+		"country_code": cstr(frappe.get_cached_value("Country", address["country"], "code")).upper(),
 	}
 	optional_fields = ("last_name", "address2")
 	if missing := [

@@ -156,9 +156,8 @@ class TestOrderRules(IntegrationTestCase):
 
 
 def get_qikink_item_code() -> str:
-	supplier = frappe.get_cached_doc("Qikink Settings").supplier
 	item_codes = frappe.get_all("Item", filters={"commera_qikink_sku": ["is", "set"]}, pluck="name")
-	qikink_items = get_qikink_items(item_codes, supplier)
+	qikink_items = get_qikink_items(item_codes)
 	if not qikink_items:
 		raise frappe.DoesNotExistError("Map one item to a Qikink SKU before running these tests")
 	return next(iter(qikink_items))

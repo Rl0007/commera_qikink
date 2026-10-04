@@ -4,6 +4,12 @@ from frappe.query_builder import DocType
 from frappe.utils.data import cint, cstr
 
 MAX_SKU_LENGTH = 50
+ITEM_FIELDS = [
+	"name as item_code",
+	"item_name",
+	"commera_qikink_sku as sku",
+	"commera_qikink_plain_product as plain_product",
+]
 
 
 def get_product_skus(item_template: str) -> list[dict]:
@@ -61,12 +67,7 @@ def get_variant_rows(item_template: str) -> list[dict]:
 	return frappe.get_all(
 		"Item",
 		filters={"variant_of": item_template, "disabled": 0},
-		fields=[
-			"name as item_code",
-			"item_name",
-			"commera_qikink_sku as sku",
-			"commera_qikink_plain_product as plain_product",
-		],
+		fields=ITEM_FIELDS,
 		order_by="name asc",
 	)
 
@@ -75,12 +76,7 @@ def get_own_rows(item_template: str) -> list[dict]:
 	return frappe.get_all(
 		"Item",
 		filters={"name": item_template},
-		fields=[
-			"name as item_code",
-			"item_name",
-			"commera_qikink_sku as sku",
-			"commera_qikink_plain_product as plain_product",
-		],
+		fields=ITEM_FIELDS,
 	)
 
 
@@ -96,7 +92,7 @@ def get_entry(row: dict, current: set, item_template: str) -> dict:
 
 
 def get_qikink_supplier() -> str:
-	supplier = frappe.get_cached_doc("Qikink Settings").supplier
+	supplier = frappe.db.get_single_value("Qikink Settings", "supplier")
 	if not supplier:
 		frappe.throw(
 			_(

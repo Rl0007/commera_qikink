@@ -73,13 +73,7 @@ def get_buying_rates(item_codes: list[str], price_list: str | None) -> dict:
 
 def deliver_drop_ship_order(sales_order: str):
 	"""Marks the order's Qikink purchase order lines delivered in full, as ERPNext's Deliver (Dropship) does."""
-	supplier = frappe.get_cached_doc("Qikink Settings").supplier
-	purchase_orders = frappe.get_all(
-		"Purchase Order",
-		filters={"supplier": supplier, "docstatus": 1, "name": ["in", get_purchase_orders(sales_order)]},
-		pluck="name",
-	)
-	for name in purchase_orders:
+	for name in get_drop_ship_purchase_orders(sales_order):
 		purchase_order = frappe.get_doc("Purchase Order", name)
 		undelivered = [
 			{"name": item.name, "qty_change": item.qty - item.received_qty}
@@ -93,14 +87,8 @@ def deliver_drop_ship_order(sales_order: str):
 
 def cancel_drop_ship_order(sales_order: str):
 	# Must run before the order's own cancel: ERPNext's unlink_ref_doc_from_po blanks these links in on_cancel.
-	supplier = frappe.get_cached_doc("Qikink Settings").supplier
-	purchase_orders = frappe.get_all(
-		"Purchase Order",
-		filters={"supplier": supplier, "docstatus": 1, "name": ["in", get_purchase_orders(sales_order)]},
-		pluck="name",
-	)
 	with as_apps_user("commera_qikink"):
-		for name in purchase_orders:
+		for name in get_drop_ship_purchase_orders(sales_order):
 			frappe.get_doc("Purchase Order", name).cancel()
 
 
@@ -109,5 +97,18 @@ def get_purchase_orders(sales_order: str) -> list[str]:
 		"Purchase Order Item",
 		filters={"sales_order": sales_order, "docstatus": 1},
 		pluck="parent",
+		distinct=True,
+	)
+
+
+def get_drop_ship_purchase_orders(sales_order: str) -> list[str]:
+	return frappe.get_all(
+		"Purchase Order",
+		filters=[
+			["Purchase Order Item", "sales_order", "=", sales_order],
+			["supplier", "=", frappe.db.get_single_value("Qikink Settings", "supplier")],
+			["docstatus", "=", 1],
+		],
+		pluck="name",
 		distinct=True,
 	)
