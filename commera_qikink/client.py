@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import frappe
 import requests
 from frappe import _
@@ -32,10 +34,10 @@ class Qikink:
 		self.token_key = frappe.cache.make_key(f"commera_qikink:token:{self.base_url}:{self.client_id}")
 
 	def create_order(self, payload: dict) -> dict:
-		return self.request("POST", "/api/order/create", json=payload)
+		return self.request(make_post_request, "/api/order/create", json=payload)
 
 	def get_order(self, order_id: str | int) -> dict:
-		return self.request("GET", "/api/order", params={"id": order_id})
+		return self.request(make_get_request, "/api/order", params={"id": order_id})
 
 	def find_order(self, order_number: str) -> dict | None:
 		# Neither endpoint filters by order number on the sandbox, so page through the recent orders.
@@ -47,26 +49,26 @@ class Qikink:
 	def iter_orders(self, max_pages: int):
 		"""Newest first, one request per 10 orders; stop iterating to stop paging."""
 		for page_no in range(1, max_pages + 1):
-			orders = self.request("GET", "/api/order", params={"page_no": page_no})
+			orders = self.request(make_get_request, "/api/order", params={"page_no": page_no})
 			if not orders:
 				return
 			yield from orders
 
-	def request(self, method: str, path: str, **kwargs) -> dict:
+	def request(self, make_request: Callable, path: str, **kwargs) -> dict:
 		token = self.get_token()
 		try:
-			return self.send(method, path, token, **kwargs)
+			return self.send(make_request, path, token, **kwargs)
 		except InvalidTokenError:
 			self.clear_token(token)
 
 		try:
-			return self.send(method, path, self.get_token(), **kwargs)
+			return self.send(make_request, path, self.get_token(), **kwargs)
 		except InvalidTokenError as error:
 			frappe.throw(_("Qikink refused the access token: {0}").format(error), QikinkError)
 
-	def send(self, method: str, path: str, token: str, **kwargs) -> dict:
+	def send(self, make_request: Callable, path: str, token: str, **kwargs) -> dict:
 		headers = {"ClientId": self.client_id, "Accesstoken": token}
-		status, body = fetch(method, self.base_url + path, headers=headers, **kwargs)
+		status, body = get_reply(make_request, self.base_url + path, headers=headers, **kwargs)
 		if error := get_error(status, body):
 			if status == 401 or "token" in error.lower():
 				raise InvalidTokenError(error)
@@ -83,8 +85,8 @@ class Qikink:
 			return self.read_token() or self.mint_token()
 
 	def mint_token(self) -> str:
-		status, body = fetch(
-			"POST",
+		status, body = get_reply(
+			make_post_request,
 			f"{self.base_url}/api/token",
 			data={"ClientId": self.client_id, "client_secret": self.client_secret},
 		)
@@ -107,24 +109,20 @@ class Qikink:
 			frappe.cache.delete(self.token_key)
 
 
-def fetch(method: str, url: str, **kwargs) -> tuple[int, object]:
-	make_request = make_post_request if method == "POST" else make_get_request
+def get_reply(make_request: Callable, url: str, **kwargs) -> tuple[int, object]:
 	try:
 		return 200, make_request(url, **kwargs)
 	except requests.HTTPError as error:
-		return error.response.status_code, read_body(error.response)
+		# The 4xx body carries Qikink's message, and "invalid token" there is what triggers the retry.
+		try:
+			return error.response.status_code, frappe.parse_json(error.response.text)
+		except ValueError:
+			return error.response.status_code, error.response.text
 	except requests.JSONDecodeError as error:
 		# Seen on an order create that Qikink went on to accept, so the order may well exist.
 		frappe.throw(_("Qikink sent a reply that could not be read: {0}").format(error), QikinkError)
 	except requests.RequestException as error:
 		frappe.throw(_("Could not reach Qikink: {0}").format(error), QikinkError)
-
-
-def read_body(response: requests.Response) -> object:
-	try:
-		return response.json()
-	except ValueError:
-		return response.text
 
 
 def get_error(status: int, body: object) -> str | None:
