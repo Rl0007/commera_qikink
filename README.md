@@ -55,9 +55,28 @@ bench restart
 An order is never sent twice. If a send fails halfway, the next attempt first looks for the order on Qikink
 and uses it when it is there.
 
-The **Qikink orders** page in the sidebar lists every order sent to Qikink, with its Qikink number and
-status, Purchase Order, shipment status and the date it was sent. The **Qikink** card on an order shows the
-same details for that order.
+## Dashboard
+
+Click **Apps > Qikink** in the Commera sidebar to open the dashboard. For the period you pick, it shows:
+
+- How many orders went to Qikink, and how many are delivered, in progress or have a problem
+- Orders sent per day, or per month for longer periods
+- Orders by Qikink status
+- Orders that need you: COD orders not sent yet, sends that did not finish, and returned, lost or cancelled orders
+- The five newest orders
+
+**Sync now** reads the status of every open order from Qikink.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+  <img alt="Qikink dashboard in Commera" src="docs/images/dashboard-light.png">
+</picture>
+
+<img alt="Qikink dashboard on a phone" src="docs/images/dashboard-mobile.png" width="300">
+
+The **Qikink orders** page, under the dashboard in the sidebar, lists every order sent to Qikink, with its
+Qikink number and status, Purchase Order, shipment status and the date it was sent. The **Qikink** card on
+an order shows the same details for that order.
 
 ## Limits
 
