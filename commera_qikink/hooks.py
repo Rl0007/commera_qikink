@@ -267,8 +267,8 @@ commera_api_version = [1]
 after_install = "commera_qikink.install.add_custom_fields"
 after_migrate = "commera_qikink.install.add_custom_fields"
 
-commera_validate_cart = ["commera_qikink.cart.get_unmapped_item_refusal"]
-commera_order_paid = ["commera_qikink.orders.on_order_paid"]
+commera_events = {"order_paid": ["commera_qikink.orders.on_order_paid"]}
+commera_checkout = {"validate_cart": ["commera_qikink.cart.get_unmapped_item_refusal"]}
 
 doc_events = {
 	"Sales Order": {
