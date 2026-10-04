@@ -1,93 +1,114 @@
-# Commera Qikink
+<div align="center" markdown="1">
 
-Sends your Commera store orders to [Qikink](https://qikink.com), which prints and ships them for you.
+<img src="commera_qikink/public/images/commera_qikink.svg" alt="Commera Qikink logo" width="80" />
+<h1>Commera Qikink</h1>
 
-- A paid order goes to Qikink by itself. You send a cash on delivery (COD) order with **Send to Qikink**.
-- Each Qikink line is bought from Qikink with a drop-ship Purchase Order.
-- Every hour the app reads each open order's status from Qikink. When Qikink ships, the order gets its
-  courier, AWB and tracking link, and the shopper sees them. When Qikink delivers, the Purchase Order is
-  marked delivered.
-- Checkout refuses a cart that holds a Qikink product without a Qikink SKU.
+<a href="https://bwh.tech"><img src=".github/built-at-bwh.svg" alt="Built at BWH" height="28" /></a>
 
-## Install
+**Send Commera orders to Qikink for print on demand**
 
-Commera must be on the site first.
+<p>
+	<img src=".github/logos/qikink.png" alt="Qikink" height="40" />
+</p>
+
+</div>
+
+Commera Qikink lets a Commera store sell print-on-demand products: Qikink prints and ships each order, and
+ERPNext buys it from Qikink with a drop-ship Purchase Order. Read the **[setup guide](https://docs.bwh.tech/qikink)**.
+
+### Print partner
+
+- **Qikink**: prints each order and ships it to the shopper, with a sandbox for testing
+
+### Features
+
+- Paid orders go to Qikink by themselves; cash on delivery orders go with **Send to Qikink**
+- A drop-ship Purchase Order to Qikink for each order Qikink accepts
+- One Qikink SKU per product variant, for your own designs or for blank catalog products
+- Courier, AWB and tracking link on the order once Qikink ships, checked every hour
+- Checkout refuses a cart with a Qikink product that has no Qikink SKU
+- An order is never sent twice, even when a send fails halfway
+- A dashboard and an orders page for everything sent to Qikink
+
+### How it works
+
+```mermaid
+sequenceDiagram
+    participant Store as Your store
+    participant CQ as Commera Qikink
+    participant Q as Qikink
+
+    Store->>CQ: order paid, or Send to Qikink clicked
+    CQ->>Q: create the order
+    Q-->>CQ: order accepted
+    CQ-->>Store: drop-ship Purchase Order to Qikink
+    Note over Q: Qikink prints and ships the order
+    CQ->>Q: every hour, read the status of open orders
+    Q-->>CQ: status, courier and AWB
+    CQ-->>Store: tracking link for the shopper
+```
+
+### Dashboard
+
+Click **Apps > Qikink** in the Commera sidebar. For the period you pick, it shows how many orders went to
+Qikink and where they are, orders sent per day, orders by Qikink status, the orders that need you, and the
+five newest orders. **Sync now** reads the status of every open order from Qikink.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+  <img alt="Qikink dashboard in Commera" src="docs/images/dashboard-light.png">
+</picture>
+
+<img alt="Qikink dashboard on a phone" src="docs/images/dashboard-mobile.png" width="300">
+
+### Limits
+
+- Qikink has no cancel API. Cancel the order on Qikink's dashboard, click **Mark cancelled on Qikink** on
+  the order, then cancel it.
+- Qikink has no webhooks, so a new status arrives within an hour, or when you click **Refresh Qikink status**.
+- The status sync looks through your newest 200 Qikink orders.
+- Paying Qikink from your wallet, and the Purchase Invoice for it, are manual.
+
+### Installation
+
+You need Commera, on ERPNext and Frappe 16 or later.
 
 ```bash
-cd ~/frappe-bench
 bench get-app https://github.com/Rl0007/commera_qikink
 bench --site your.site install-app commera_qikink
 bench build --app commera_qikink
-bench restart
 ```
 
-## Set up
+Then follow the [setup guide](https://docs.bwh.tech/qikink) to connect your Qikink account and map your
+products to Qikink SKUs.
 
-1. Create a Supplier for Qikink in ERPNext, and a buying Price List with a buying price for each Qikink
-   product variant. The Purchase Order uses these prices.
-2. In the Commera dashboard, open **Settings > Installed apps > Qikink** and fill in:
-   - **Client ID** and **Client Secret**: from your Qikink dashboard (Integration > Custom API).
-   - **Sandbox**: keep it on while you test against Qikink's sandbox.
-   - **Supplier**: the Qikink supplier.
-   - **Buying Price List**: the price list from step 1.
-3. Open a product and click **More actions > Set Qikink SKUs**. You enter one SKU for each variant
-   (colour and size), because one Qikink SKU is one model, colour and size. A product without variants
-   takes one SKU. For each SKU, choose how Qikink reads it:
-   - **Plain off**: the SKU of your own design on Qikink's **My Products** page.
-   - **Plain on**: a blank catalog SKU, such as `MVnHs-Wh-S`. Qikink ships it without a print.
+### Adding a Commera app of your own
 
-   Saving also marks each mapped variant as delivered by the supplier, with Qikink as its default
-   supplier. The product's **Qikink** card shows how many variants are mapped.
+This app is the worked example in Commera's developer docs. The
+[step-by-step guide](https://docs.bwh.tech/commera/build-an-app/overview) builds it from an empty app:
+settings, product mapping, the checkout and order hooks, drop-ship orders, status sync, and the dashboard
+pages, cards and actions under `commera/`, tests included.
 
-## How orders flow
-
-1. **Paid orders.** When Commera marks an order paid, the app sends it to Qikink. The Qikink order number is
-   the digits of the order name: `SAL-ORD-2026-00062` becomes `202600062`. A name that gives more than 15
-   digits is refused, never cut short.
-2. **COD orders.** Submit the order first. Then click **More actions > Send to Qikink** on the order. Qikink's
-   courier collects the cash.
-3. **Purchase Order.** Right after Qikink accepts the order, the app makes and submits a drop-ship Purchase
-   Order to your Qikink supplier. If a buying price is missing, the order stays with Qikink and the app
-   logs an Error Log. Add the price, then click **Send to Qikink** again to make the Purchase Order.
-4. **Status.** An hourly job reads the status of every open order. **More actions > Refresh Qikink status**
-   on an order reads it at once, and **Sync now** on the **Qikink orders** page reads all open orders.
-
-An order is never sent twice. If a send fails halfway, the next attempt first looks for the order on Qikink
-and uses it when it is there.
-
-The **Qikink orders** page in the sidebar lists every order sent to Qikink, with its Qikink number and
-status, Purchase Order, shipment status and the date it was sent. The **Qikink** card on an order shows the
-same details for that order.
-
-## Limits
-
-- Cancellations and returns are not synced. Qikink has no cancel API; cancel on Qikink's dashboard and in
-  ERPNext yourself. A submitted Purchase Order stops the Sales Order from being cancelled until you cancel
-  the Purchase Order.
-- Qikink's sandbox answers `order/list` with 404, so the app reads status with the older order endpoint. It
-  pages through your newest 200 Qikink orders; an older open order is not found.
-- Paying Qikink from your wallet, and the Purchase Invoice for it, are manual.
-- Qikink has no webhooks, so a status reaches Commera within an hour, or when you refresh.
-
-## Development
+### Development
 
 ```bash
-cd ~/frappe-bench/apps/commera_qikink
-yarn dev
+bench --site test_site set-config allow_tests true
+# once: send one order to Qikink and map one item to a Qikink SKU on the site
+bench --site test_site run-tests --app commera_qikink
 ```
 
-`yarn dev` rebuilds the dashboard extensions under `commera/` each time you save. Reload `/commera` to see
-the change. `commera/README.md` lists what each folder adds.
+The tests use the real database and never call Qikink. `yarn dev` rebuilds the dashboard extensions under
+`commera/` each time you save.
 
-Run the tests on a site with `allow_tests` on:
+### Support
 
-```bash
-bench --site your.site run-tests --app commera_qikink
-```
+Found a bug or have a question? [Open an issue](https://github.com/Rl0007/commera_qikink/issues).
 
-The tests use the real database and never call Qikink. They need one order already sent to Qikink and one
-item with a Qikink SKU on the site.
+## About BWH Tech
 
-## License
+Commera Qikink is developed and maintained by [BWH Tech](https://bwh.tech), a tech company based in Jagdalpur,
+Chhattisgarh, specializing in Frappe customizations and consulting.
+
+#### License
 
 MIT
