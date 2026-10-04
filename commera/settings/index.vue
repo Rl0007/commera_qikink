@@ -1,3 +1,3 @@
 <script>
-export const extension = { label: 'Qikink', icon: 'printer', doctype: 'Qikink Settings' }
+export const extension = { label: 'Qikink', doctype: 'Qikink Settings' }
 </script>
