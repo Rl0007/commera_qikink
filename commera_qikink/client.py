@@ -109,6 +109,9 @@ def fetch(method: str, url: str, **kwargs) -> tuple[int, object]:
 		return 200, make_request(url, **kwargs)
 	except requests.HTTPError as error:
 		return error.response.status_code, read_body(error.response)
+	except requests.JSONDecodeError as error:
+		# Seen on an order create that Qikink went on to accept, so the order may well exist.
+		frappe.throw(_("Qikink sent a reply that could not be read: {0}").format(error), QikinkError)
 	except requests.RequestException as error:
 		frappe.throw(_("Could not reach Qikink: {0}").format(error), QikinkError)
 

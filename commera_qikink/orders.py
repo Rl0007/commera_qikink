@@ -7,6 +7,7 @@ from frappe.utils.data import cint, cstr, flt, now_datetime
 
 from commera_qikink.client import Qikink, QikinkError
 from commera_qikink.items import get_qikink_items
+from commera_qikink.purchase_orders import make_drop_ship_order
 
 COD_PAYMENT_MODE = "COD"
 MAX_ORDER_NUMBER_LENGTH = 15
@@ -23,18 +24,19 @@ def on_order_paid(event):
 
 
 def send_order(sales_order: str) -> str | None:
-	"""Returns the Qikink order number, or None when the order has no Qikink lines."""
+	"""Returns the Qikink order number, or None when the order has no Qikink lines. Also makes the
+	drop-ship Purchase Order, so calling it again retries one that failed."""
 	# Locks the row, so the paid event and a staff click can't both get past the sent check.
 	order = frappe.get_doc("Sales Order", sales_order, for_update=True)
 	if order.docstatus != 1:
 		frappe.throw(_("Submit order {0} before sending it to Qikink.").format(sales_order))
-	if order.commera_qikink_order_number:
-		return order.commera_qikink_order_number
+	if not order.commera_qikink_order_number:
+		lines = get_qikink_lines(order)
+		if not lines:
+			return None
+		submit_to_qikink(order, lines)
 
-	lines = get_qikink_lines(order)
-	if not lines:
-		return None
-	submit_to_qikink(order, lines)
+	save_drop_ship_order(order)
 	return order.commera_qikink_order_number
 
 
@@ -80,6 +82,19 @@ def submit_to_qikink(order, lines: list[tuple]):
 		update_modified=False,
 	)
 	frappe.db.commit()
+
+
+def save_drop_ship_order(order):
+	try:
+		make_drop_ship_order(order)
+	except Exception:
+		# Qikink already holds the order, so a failed purchase order is logged, never allowed to undo it.
+		frappe.db.rollback()
+		frappe.log_error(
+			title=_("Qikink purchase order failed for {0}").format(order.name),
+			reference_doctype="Sales Order",
+			reference_name=order.name,
+		)
 
 
 def create_order(client: Qikink, payload: dict):
