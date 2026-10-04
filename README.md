@@ -104,10 +104,10 @@ The tests use the real database and never call Qikink. `yarn dev` rebuilds the d
 
 Found a bug or have a question? [Open an issue](https://github.com/Rl0007/commera_qikink/issues).
 
-## About BWH Studios
+## About BWH Tech
 
-Commera Qikink is developed and maintained by BWH Studios, a tech company based in Jagdalpur, Chhattisgarh,
-specializing in Frappe customizations and consulting.
+Commera Qikink is developed and maintained by [BWH Tech](https://bwh.tech), a tech company based in Jagdalpur,
+Chhattisgarh, specializing in Frappe customizations and consulting.
 
 #### License
 
