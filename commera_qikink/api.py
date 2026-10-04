@@ -1,7 +1,15 @@
 import frappe
 from frappe import _
 
-from commera_qikink import cancellations, order_card, order_list, order_status, orders, products
+from commera_qikink import (
+	cancellations,
+	order_card,
+	order_dashboard,
+	order_list,
+	order_status,
+	orders,
+	products,
+)
 
 
 @frappe.whitelist(methods=["GET"])
@@ -54,3 +62,9 @@ def get_sent_orders(start: int = 0, page_length: int = 20) -> dict:
 def sync_open_orders() -> str:
 	frappe.has_permission("Sales Order", "write", throw=True)
 	return _("Updated {0} orders from Qikink").format(len(order_status.sync_open_orders()))
+
+
+@frappe.whitelist(methods=["GET"])
+def get_order_dashboard(period: str = "Last 30 days") -> dict:
+	frappe.has_permission("Sales Order", "read", throw=True)
+	return order_dashboard.get_dashboard(period)
