@@ -52,6 +52,12 @@ def set_drop_ship_lines(doc, method=None):
 			row.supplier = supplier
 
 
+def has_qikink_lines(sales_order: str) -> bool:
+	supplier = frappe.get_cached_doc("Qikink Settings").supplier
+	item_codes = frappe.get_all("Sales Order Item", filters={"parent": sales_order}, pluck="item_code")
+	return bool(get_qikink_items(item_codes, supplier))
+
+
 def get_qikink_lines(order) -> list[tuple]:
 	supplier = frappe.get_cached_doc("Qikink Settings").supplier
 	qikink_items = get_qikink_items([row.item_code for row in order.items], supplier)

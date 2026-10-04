@@ -1,8 +1,9 @@
 import frappe
 from commera.sdk import STORE_ORDER_TYPE
+from frappe import _
 from frappe.utils import today
 
-from commera_qikink import orders, products
+from commera_qikink import order_card, orders, products
 
 
 @frappe.whitelist()
@@ -28,7 +29,16 @@ def save_product_skus(item: str, skus: str | list) -> list[dict]:
 	return products.save_product_skus(item, frappe.parse_json(skus))
 
 
+@frappe.whitelist(methods=["GET"])
+def get_order_card(sales_order: str) -> dict:
+	frappe.has_permission("Sales Order", "read", doc=sales_order, throw=True)
+	return order_card.get_order_card(sales_order)
+
+
 @frappe.whitelist(methods=["POST"])
-def send_order(sales_order: str) -> str | None:
-	frappe.has_permission("Sales Order", "write", doc=sales_order, throw=True)
-	return orders.send_order(sales_order)
+def send_order(name: str) -> str:
+	frappe.has_permission("Sales Order", "write", doc=name, throw=True)
+	order_number = orders.send_order(name)
+	if not order_number:
+		frappe.throw(_("Order {0} has no Qikink items to send.").format(name))
+	return _("Sent to Qikink as order {0}").format(order_number)
