@@ -3,7 +3,7 @@
 <img src="commera_qikink/public/images/commera_qikink.svg" alt="Commera Qikink logo" width="80" />
 <h1>Commera Qikink</h1>
 
-<a href="https://buildwithhussain.com"><img src=".github/built-at-bwh.svg" alt="Built at BWH" height="28" /></a>
+<a href="https://bwh.tech"><img src=".github/built-at-bwh.svg" alt="Built at BWH" height="28" /></a>
 
 **Send Commera orders to Qikink for print on demand**
 
