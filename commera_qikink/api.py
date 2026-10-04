@@ -3,7 +3,7 @@ from commera.sdk import STORE_ORDER_TYPE
 from frappe import _
 from frappe.utils import today
 
-from commera_qikink import order_card, orders, products
+from commera_qikink import order_card, order_status, orders, products
 
 
 @frappe.whitelist()
@@ -42,3 +42,9 @@ def send_order(name: str) -> str:
 	if not order_number:
 		frappe.throw(_("Order {0} has no Qikink items to send.").format(name))
 	return _("Sent to Qikink as order {0}").format(order_number)
+
+
+@frappe.whitelist(methods=["POST"])
+def refresh_order_status(name: str) -> str:
+	frappe.has_permission("Sales Order", "write", doc=name, throw=True)
+	return _("Qikink status: {0}").format(order_status.refresh_order_status(name))

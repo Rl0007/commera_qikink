@@ -271,3 +271,6 @@ commera_validate_cart = ["commera_qikink.cart.get_unmapped_item_refusal"]
 commera_order_paid = ["commera_qikink.orders.on_order_paid"]
 
 doc_events = {"Sales Order": {"before_validate": "commera_qikink.orders.set_drop_ship_lines"}}
+
+# Qikink has no webhooks: poll for status and AWBs. Hourly, as production takes days; staff can refresh one order.
+scheduler_events = {"hourly": ["commera_qikink.order_status.sync_open_orders"]}

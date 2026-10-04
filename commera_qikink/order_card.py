@@ -1,6 +1,7 @@
 import frappe
 
 from commera_qikink.orders import has_qikink_lines
+from commera_qikink.purchase_orders import get_purchase_orders
 
 
 def get_order_card(sales_order: str) -> dict:
@@ -14,16 +15,6 @@ def get_order_card(sales_order: str) -> dict:
 		"purchase_orders": get_purchase_orders(sales_order),
 		"shipments": get_shipments(sales_order),
 	}
-
-
-def get_purchase_orders(sales_order: str) -> list[str]:
-	return frappe.get_all(
-		"Purchase Order Item",
-		filters={"sales_order": sales_order, "docstatus": 1},
-		pluck="parent",
-		distinct=True,
-		order_by="parent",
-	)
 
 
 def get_shipments(sales_order: str) -> list[dict]:

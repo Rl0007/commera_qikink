@@ -39,14 +39,18 @@ class Qikink:
 
 	def find_order(self, order_number: str) -> dict | None:
 		# Neither endpoint filters by order number on the sandbox, so page through the recent orders.
-		for page_no in range(1, MAX_ORDER_PAGES + 1):
+		return next(
+			(order for order in self.iter_orders(MAX_ORDER_PAGES) if get_order_number(order) == order_number),
+			None,
+		)
+
+	def iter_orders(self, max_pages: int):
+		"""Newest first, one request per 10 orders; stop iterating to stop paging."""
+		for page_no in range(1, max_pages + 1):
 			orders = self.request("GET", "/api/order", params={"page_no": page_no})
 			if not orders:
-				return None
-			for order in orders:
-				if get_order_number(order) == order_number:
-					return order
-		return None
+				return
+			yield from orders
 
 	def request(self, method: str, path: str, **kwargs) -> dict:
 		token = self.get_token()

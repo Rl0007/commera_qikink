@@ -69,3 +69,32 @@ def get_buying_rates(item_codes: list[str], price_list: str | None) -> dict:
 		fields=["item_code", "price_list_rate"],
 	)
 	return {price.item_code: price.price_list_rate for price in prices}
+
+
+def deliver_drop_ship_order(sales_order: str):
+	"""Marks the order's Qikink purchase order lines delivered in full, as ERPNext's Deliver (Dropship) does."""
+	supplier = frappe.get_cached_doc("Qikink Settings").supplier
+	purchase_orders = frappe.get_all(
+		"Purchase Order",
+		filters={"supplier": supplier, "docstatus": 1, "name": ["in", get_purchase_orders(sales_order)]},
+		pluck="name",
+	)
+	for name in purchase_orders:
+		purchase_order = frappe.get_doc("Purchase Order", name)
+		undelivered = [
+			{"name": item.name, "qty_change": item.qty - item.received_qty}
+			for item in purchase_order.items
+			if item.sales_order == sales_order and item.delivered_by_supplier and item.qty > item.received_qty
+		]
+		if undelivered:
+			with as_apps_user("commera_qikink"):
+				purchase_order.update_dropship_received_qty(undelivered)
+
+
+def get_purchase_orders(sales_order: str) -> list[str]:
+	return frappe.get_all(
+		"Purchase Order Item",
+		filters={"sales_order": sales_order, "docstatus": 1},
+		pluck="parent",
+		distinct=True,
+	)
