@@ -114,6 +114,15 @@ class TestOrderStatus(IntegrationTestCase):
 
 
 def make_sent_order():
+	sales_order = make_order()
+	sales_order.db_set(
+		{"commera_qikink_order_number": get_order_number(sales_order.name), "commera_qikink_status": "Sent"}
+	)
+	return sales_order
+
+
+def make_order():
+	"""A submitted copy of the Qikink lines of the newest order sent to Qikink, not sent itself."""
 	template = frappe.get_all(
 		"Sales Order",
 		filters={"docstatus": 1, "commera_qikink_order_number": ["is", "set"]},
@@ -131,17 +140,17 @@ def make_sent_order():
 			"payment_schedule": [],
 			"commera_qikink_order_number": None,
 			"commera_qikink_status": None,
+			"commera_qikink_sent_at": None,
 		}
 	)
+	# The newest order may be a mixed cart; the store's own lines would hold back per_delivered.
+	sales_order.items = [row for row in sales_order.items if row.delivered_by_supplier]
 	for row in sales_order.items:
 		# Copied as they are: the quotation link would overbill it, and ordered_qty hides it from the PO mapper.
 		row.prevdoc_docname = row.quotation_item = None
 		row.ordered_qty = row.delivered_qty = 0
 	sales_order.insert()
 	sales_order.submit()
-	sales_order.db_set(
-		{"commera_qikink_order_number": get_order_number(sales_order.name), "commera_qikink_status": "Sent"}
-	)
 	return sales_order
 
 
