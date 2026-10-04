@@ -1,3 +1,3 @@
 <script>
-export const extension = { label: 'Qikink', doctype: 'Qikink Settings' }
+export const plugin = { label: 'Qikink', doctype: 'Qikink Settings' }
 </script>

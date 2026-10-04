@@ -1,13 +1,13 @@
 <script>
-export const extension = { label: 'Qikink' }
+export const plugin = { label: 'Qikink' }
 </script>
 
 <script setup>
 import { computed, watch } from 'vue'
 import { Skeleton } from 'frappe-ui'
-import { useCard, useExtension, useMethodRead } from '@commera/admin'
+import { useCard, usePlugin, useMethodRead } from '@commera/admin'
 
-const { record } = useExtension()
+const { record } = usePlugin()
 const card = useCard()
 
 const cardRequest = useMethodRead('commera_qikink.api.get_order_card', {

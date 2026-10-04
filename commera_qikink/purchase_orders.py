@@ -1,5 +1,5 @@
 import frappe
-from commera.sdk import as_apps_user
+from commera.sdk import as_plugin_user
 from frappe import _
 from frappe.utils import today
 
@@ -31,7 +31,7 @@ def make_drop_ship_order(order) -> str | None:
 		return None
 
 	# The staff member who clicks Send may sell without being allowed to buy.
-	with as_apps_user("commera_qikink"):
+	with as_plugin_user("commera_qikink"):
 		selected_items = [{"item_code": row.item_code, "supplier": settings.supplier} for row in lines]
 		# Commera orders carry no delivery date, which the mapper copies into each line's Required By.
 		target = frappe.new_doc("Purchase Order", schedule_date=order.delivery_date or today())
@@ -81,13 +81,13 @@ def deliver_drop_ship_order(sales_order: str):
 			if item.sales_order == sales_order and item.delivered_by_supplier and item.qty > item.received_qty
 		]
 		if undelivered:
-			with as_apps_user("commera_qikink"):
+			with as_plugin_user("commera_qikink"):
 				purchase_order.update_dropship_received_qty(undelivered)
 
 
 def cancel_drop_ship_order(sales_order: str):
 	# Must run before the order's own cancel: ERPNext's unlink_ref_doc_from_po blanks these links in on_cancel.
-	with as_apps_user("commera_qikink"):
+	with as_plugin_user("commera_qikink"):
 		for name in get_drop_ship_purchase_orders(sales_order):
 			frappe.get_doc("Purchase Order", name).cancel()
 

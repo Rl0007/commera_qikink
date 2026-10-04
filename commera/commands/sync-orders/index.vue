@@ -1,5 +1,5 @@
 <script>
-export const extension = {
+export const plugin = {
 	label: "Sync Qikink orders",
 	icon: "refresh-cw",
 	keywords: ["qikink", "print"],

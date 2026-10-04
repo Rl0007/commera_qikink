@@ -1,5 +1,5 @@
 <script>
-export const extension = { label: "Dashboard", icon: "chart-column", order: 0 };
+export const plugin = { label: "Dashboard", icon: "chart-column", order: 0 };
 </script>
 
 <script setup>
@@ -12,7 +12,7 @@ import {
 	ListSkeleton,
 	money,
 	StatusBadge,
-	useExtension,
+	usePlugin,
 	useMethodAction,
 	useMethodRead,
 	usePage,
@@ -21,7 +21,7 @@ import {
 const PERIODS = ["Last 7 days", "Last 30 days", "Last 12 months", "All time"];
 const ROW_HEIGHT = 60;
 
-const { navigate, toast } = useExtension();
+const { navigate, toast } = usePlugin();
 const period = ref("Last 30 days");
 
 const dashboardRequest = useMethodRead("commera_qikink.api.get_order_dashboard", {

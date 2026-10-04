@@ -96,7 +96,7 @@ def get_qikink_supplier() -> str:
 	if not supplier:
 		frappe.throw(
 			_(
-				"Choose the Qikink supplier first, in Settings > Installed apps > Qikink. "
+				"Choose the Qikink supplier first, in Settings > Installed plugins > Qikink. "
 				"Qikink ships these products for you, so each one is bought from that supplier."
 			)
 		)

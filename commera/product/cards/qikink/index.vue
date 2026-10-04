@@ -1,14 +1,14 @@
 <script>
-export const extension = { label: 'Qikink' }
+export const plugin = { label: 'Qikink' }
 </script>
 
 <script setup>
 import { computed } from 'vue'
 import { Skeleton } from 'frappe-ui'
-import { useExtension, useMethodRead } from '@commera/admin'
+import { usePlugin, useMethodRead } from '@commera/admin'
 import { modeLabel, variantLabel } from '../../../shared/skus'
 
-const { record } = useExtension()
+const { record } = usePlugin()
 
 const skusRequest = useMethodRead('commera_qikink.api.get_product_skus', {
 	params: () => ({ item: record.value.name }),

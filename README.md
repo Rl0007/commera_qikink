@@ -50,7 +50,7 @@ sequenceDiagram
 
 ### Dashboard
 
-Click **Apps > Qikink** in the Commera sidebar. For the period you pick, it shows how many orders went to
+Click **Plugins > Qikink** in the Commera sidebar. For the period you pick, it shows how many orders went to
 Qikink and where they are, orders sent per day, orders by Qikink status, the orders that need you, and the
 five newest orders. **Sync now** reads the status of every open order from Qikink.
 
@@ -82,10 +82,10 @@ bench build --app commera_qikink
 Then follow the [setup guide](https://docs.bwh.tech/qikink) to connect your Qikink account and map your
 products to Qikink SKUs.
 
-### Adding a Commera app of your own
+### Adding a Commera plugin of your own
 
-This app is the worked example in Commera's developer docs. The
-[step-by-step guide](https://docs.bwh.tech/commera/build-an-app/overview) builds it from an empty app:
+This plugin is the worked example in Commera's developer docs. The
+[step-by-step guide](https://docs.bwh.tech/commera/build-a-plugin/overview) builds it from an empty app:
 settings, product mapping, the checkout and order hooks, drop-ship orders, status sync, and the dashboard
 pages, cards and actions under `commera/`, tests included.
 
@@ -97,8 +97,8 @@ bench --site test_site set-config allow_tests true
 bench --site test_site run-tests --app commera_qikink
 ```
 
-The tests use the real database and never call Qikink. `yarn dev` rebuilds the dashboard extensions under
-`commera/` each time you save.
+The tests use the real database and never call Qikink. `yarn dev` rebuilds the dashboard
+pages, cards and actions under `commera/` each time you save.
 
 ### Support
 

@@ -1,5 +1,5 @@
 import frappe
-from commera.sdk import as_apps_user
+from commera.sdk import as_plugin_user
 from commera.sdk import orders as commera_orders
 from frappe import _
 from frappe.utils.data import cstr
@@ -117,7 +117,7 @@ def save_order(sales_order: str, qikink_order: dict):
 
 	shipping = qikink_order.get("shipping") or {}
 	if awb := cstr(shipping.get("awb")).strip():
-		with as_apps_user("commera_qikink"):
+		with as_plugin_user("commera_qikink"):
 			commera_orders.record_shipment(
 				sales_order,
 				awb=awb,

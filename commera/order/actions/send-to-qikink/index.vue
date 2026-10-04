@@ -1,5 +1,5 @@
 <script>
-export const extension = {
+export const plugin = {
 	label: 'Send to Qikink',
 	icon: 'printer',
 	condition: 'commera_qikink.conditions.can_send_order',

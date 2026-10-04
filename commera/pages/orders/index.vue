@@ -1,5 +1,5 @@
 <script>
-export const extension = { label: 'Qikink orders', icon: 'printer', order: 1 }
+export const plugin = { label: 'Qikink orders', icon: 'printer', order: 1 }
 </script>
 
 <script setup>
@@ -10,7 +10,7 @@ import {
 	ListPagination,
 	ListSkeleton,
 	shortDate,
-	useExtension,
+	usePlugin,
 	useMethodAction,
 	useMethodRead,
 	usePage,
@@ -18,7 +18,7 @@ import {
 
 const ROW_HEIGHT = 60
 
-const { navigate, toast } = useExtension()
+const { navigate, toast } = usePlugin()
 const page = ref(1)
 const pageSize = ref(20)
 

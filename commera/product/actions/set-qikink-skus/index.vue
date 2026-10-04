@@ -1,5 +1,5 @@
 <script>
-export const extension = {
+export const plugin = {
 	label: 'Set Qikink SKUs',
 	icon: 'tag',
 	condition: 'commera_qikink.conditions.can_edit_item',
@@ -9,10 +9,10 @@ export const extension = {
 <script setup>
 import { ref, watch } from 'vue'
 import { FormControl } from 'frappe-ui'
-import { useAction, useExtension, useMethodAction, useMethodRead } from '@commera/admin'
+import { useAction, usePlugin, useMethodAction, useMethodRead } from '@commera/admin'
 import { variantLabel } from '../../../shared/skus'
 
-const { record, toast } = useExtension()
+const { record, toast } = usePlugin()
 const action = useAction()
 const rows = ref([])
 

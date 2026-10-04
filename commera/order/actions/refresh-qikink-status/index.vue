@@ -1,5 +1,5 @@
 <script>
-export const extension = {
+export const plugin = {
 	label: 'Refresh Qikink status',
 	icon: 'refresh-cw',
 	condition: 'commera_qikink.conditions.is_sent_order',

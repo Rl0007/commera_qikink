@@ -1,5 +1,5 @@
 <script>
-export const extension = {
+export const plugin = {
 	label: 'Mark cancelled on Qikink',
 	icon: 'list-checks',
 	condition: 'commera_qikink.conditions.can_mark_cancelled_on_qikink',
