@@ -1,20 +1,7 @@
 import frappe
-from commera.sdk import STORE_ORDER_TYPE
 from frappe import _
-from frappe.utils import today
 
-from commera_qikink import order_card, order_status, orders, products
-
-
-@frappe.whitelist()
-def get_summary() -> dict:
-	frappe.has_permission("Sales Order", "read", throw=True)
-	return {
-		"orders_today": frappe.db.count(
-			"Sales Order",
-			{"order_type": STORE_ORDER_TYPE, "transaction_date": today(), "docstatus": ("<", 2)},
-		)
-	}
+from commera_qikink import order_card, order_list, order_status, orders, products
 
 
 @frappe.whitelist(methods=["GET"])
@@ -48,3 +35,15 @@ def send_order(name: str) -> str:
 def refresh_order_status(name: str) -> str:
 	frappe.has_permission("Sales Order", "write", doc=name, throw=True)
 	return _("Qikink status: {0}").format(order_status.refresh_order_status(name))
+
+
+@frappe.whitelist(methods=["GET"])
+def get_sent_orders(start: int = 0, page_length: int = 20) -> dict:
+	frappe.has_permission("Sales Order", "read", throw=True)
+	return order_list.get_sent_orders(start, page_length)
+
+
+@frappe.whitelist(methods=["POST"])
+def sync_open_orders() -> str:
+	frappe.has_permission("Sales Order", "write", throw=True)
+	return _("Updated {0} orders from Qikink").format(len(order_status.sync_open_orders()))

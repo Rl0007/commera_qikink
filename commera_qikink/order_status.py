@@ -39,9 +39,10 @@ SHIPMENT_STATUSES = {
 }
 
 
-def sync_open_orders():
+def sync_open_orders() -> list[str]:
 	if open_orders := get_open_orders():
-		sync_orders(open_orders, isolate_errors=True)
+		return sync_orders(open_orders, isolate_errors=True)
+	return []
 
 
 def refresh_order_status(sales_order: str) -> str:
