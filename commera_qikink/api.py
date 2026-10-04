@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 
-from commera_qikink import order_card, order_list, order_status, orders, products
+from commera_qikink import cancellations, order_card, order_list, order_status, orders, products
 
 
 @frappe.whitelist(methods=["GET"])
@@ -35,6 +35,13 @@ def send_order(name: str) -> str:
 def refresh_order_status(name: str) -> str:
 	frappe.has_permission("Sales Order", "write", doc=name, throw=True)
 	return _("Qikink status: {0}").format(order_status.refresh_order_status(name))
+
+
+@frappe.whitelist(methods=["POST"])
+def mark_cancelled_on_qikink(name: str) -> str:
+	frappe.has_permission("Sales Order", "cancel", doc=name, throw=True)
+	cancellations.mark_cancelled_on_qikink(name)
+	return _("Marked cancelled on Qikink. You can cancel order {0} now.").format(name)
 
 
 @frappe.whitelist(methods=["GET"])

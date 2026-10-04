@@ -46,9 +46,13 @@ def sync_open_orders() -> list[str]:
 
 
 def refresh_order_status(sales_order: str) -> str:
-	order_number = frappe.db.get_value("Sales Order", sales_order, "commera_qikink_order_number")
+	order_number, status = frappe.db.get_value(
+		"Sales Order", sales_order, ["commera_qikink_order_number", "commera_qikink_status"]
+	)
 	if not order_number:
 		frappe.throw(_("Order {0} has not been sent to Qikink.").format(sales_order))
+	if is_final_status(status):
+		return status
 	if not sync_orders({order_number: sales_order}):
 		frappe.throw(
 			_("Qikink does not list order {0} among its {1} most recent orders.").format(
@@ -56,6 +60,10 @@ def refresh_order_status(sales_order: str) -> str:
 			)
 		)
 	return frappe.db.get_value("Sales Order", sales_order, "commera_qikink_status")
+
+
+def is_final_status(status: str | None) -> bool:
+	return cstr(status).casefold() in FINAL_STATUSES
 
 
 def get_open_orders() -> dict[str, str]:
@@ -67,7 +75,7 @@ def get_open_orders() -> dict[str, str]:
 	return {
 		row.commera_qikink_order_number: row.name
 		for row in rows
-		if cstr(row.commera_qikink_status).casefold() not in FINAL_STATUSES
+		if not is_final_status(row.commera_qikink_status)
 	}
 
 

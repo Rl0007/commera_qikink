@@ -91,6 +91,19 @@ def deliver_drop_ship_order(sales_order: str):
 				purchase_order.update_dropship_received_qty(undelivered)
 
 
+def cancel_drop_ship_order(sales_order: str):
+	# Must run before the order's own cancel: ERPNext's unlink_ref_doc_from_po blanks these links in on_cancel.
+	supplier = frappe.get_cached_doc("Qikink Settings").supplier
+	purchase_orders = frappe.get_all(
+		"Purchase Order",
+		filters={"supplier": supplier, "docstatus": 1, "name": ["in", get_purchase_orders(sales_order)]},
+		pluck="name",
+	)
+	with as_apps_user("commera_qikink"):
+		for name in purchase_orders:
+			frappe.get_doc("Purchase Order", name).cancel()
+
+
 def get_purchase_orders(sales_order: str) -> list[str]:
 	return frappe.get_all(
 		"Purchase Order Item",

@@ -14,6 +14,7 @@ MAX_ORDER_NUMBER_LENGTH = 15
 MAX_ADDRESS_LINE_LENGTH = 90
 SENDING_STATUS = "Sending"
 SENT_STATUS = "Sent"
+CANCELLED_STATUS = "Cancelled"
 
 
 def on_order_paid(event):
