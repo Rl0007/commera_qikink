@@ -22,7 +22,7 @@ def on_order_paid(event):
 	# A COD order fires order_paid once its cash is collected; staff send those with "Send to Qikink".
 	if event.data.get("payment_mode") == COD_PAYMENT_MODE:
 		return
-	send_order(event.sales_order)
+	send_order(event.reference_name)
 
 
 def send_order(sales_order: str) -> str | None:
